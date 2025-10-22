@@ -1,0 +1,23 @@
+[project]
+name = "notebook"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "aiohttp>=3.12.15",
+    "azure-ai-evaluation>=1.11.1",
+    "azure-ai-inference>=1.0.0b9",
+    "azure-ai-projects>=1.0.0",
+    "azure-ai-textanalytics>=5.3.0",
+    "azure-ai-translation-text>=1.0.1",
+    "azure-identity>=1.25.0",
+    "azure-search-documents>=11.5.3",
+    "cohere>=5.18.0",
+    "openai>=1.109.1",
+    "openpyxl>=3.1.5",
+    "pandas>=2.3.2",
+    "pydantic>=2.11.10",
+    "python-dotenv>=1.1.1",
+    "semantic-kernel>=1.36.0",
+]
