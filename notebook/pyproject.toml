@@ -14,6 +14,7 @@ dependencies = [
     "azure-identity>=1.25.0",
     "azure-search-documents>=11.5.3",
     "cohere>=5.18.0",
+    "langchain>=1.0.2",
     "openai>=1.109.1",
     "openpyxl>=3.1.5",
     "pandas>=2.3.2",
