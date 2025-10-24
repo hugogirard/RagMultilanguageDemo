@@ -363,16 +363,16 @@ wheels = [
 
 [[package]]
 name = "azure-ai-translation-text"
-version = "1.0.1"
+version = "1.0.0b1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "azure-core" },
-    { name = "isodate" },
+    { name = "msrest" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/04/db/4b9ea0a86c994a7355868a7cc1604ceec5963b94c38dc39bdf9205ebbe30/azure-ai-translation-text-1.0.1.tar.gz", hash = "sha256:8fff37f7ea4f82f25ad6328374859d6bad022d2f30fde9b30b5ee4cf1f7c1769", size = 96931, upload-time = "2024-06-24T21:23:17.844Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3f/6d/8c2c29058b2f987d462cb46e91f3220f96627086afb3864345262e45f3a3/azure-ai-translation-text-1.0.0b1.zip", hash = "sha256:2c9eeb292f669f7e4592903ba0a39c2ce5343f61c6db2a688f67be228846b4d5", size = 99386, upload-time = "2023-04-19T18:55:15.573Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/81/01/d3efa3e5383744fce4d5ca6f05e749928f5fc4aa62b0399c8027ada189f5/azure_ai_translation_text-1.0.1-py3-none-any.whl", hash = "sha256:2c60d1adcda68809dd9f431ec0b8ac1b1977a69037d10751a39c233bc6bc42d8", size = 87790, upload-time = "2024-06-24T21:23:19.806Z" },
+    { url = "https://files.pythonhosted.org/packages/42/ed/6752793aba2150f3841dcad6b1a4ecfda22f7610314bdb1f078c48338aa3/azure_ai_translation_text-1.0.0b1-py3-none-any.whl", hash = "sha256:af700c3cd3253100c563bcc26ecdc9ab993c85297e790f0c526e801335127a8d", size = 65710, upload-time = "2023-04-19T18:55:17.983Z" },
 ]
 
 [[package]]
@@ -1810,7 +1810,7 @@ requires-dist = [
     { name = "azure-ai-inference", specifier = ">=1.0.0b9" },
     { name = "azure-ai-projects", specifier = ">=1.0.0" },
     { name = "azure-ai-textanalytics", specifier = ">=5.3.0" },
-    { name = "azure-ai-translation-text", specifier = ">=1.0.1" },
+    { name = "azure-ai-translation-text", specifier = ">=1.0.0b1" },
     { name = "azure-identity", specifier = ">=1.25.0" },
     { name = "azure-search-documents", specifier = ">=11.5.3" },
     { name = "cohere", specifier = ">=5.18.0" },
