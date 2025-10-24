@@ -362,6 +362,20 @@ wheels = [
 ]
 
 [[package]]
+name = "azure-ai-translation-document"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "azure-core" },
+    { name = "isodate" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/27/9b/416929c4d6d7e8e37bfeb7293c7ca326e652a8610f1308007caa831df40e/azure_ai_translation_document-1.1.0.tar.gz", hash = "sha256:3e1d8ac697ff969e9b3474b8daec6af48742a95ec2f5198f6e76071233c3ee10", size = 120559, upload-time = "2024-11-12T18:39:48.533Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/47/69/0a2f44d4c41157bf4b690148cdb83f8bc9c9c94494d0f80dd462aefa3061/azure_ai_translation_document-1.1.0-py3-none-any.whl", hash = "sha256:5ef71b0b78f36d13e13bdd40f0b6d1225d727a8abb6f5cfed4d53cac491d6273", size = 94790, upload-time = "2024-11-12T18:39:50.625Z" },
+]
+
+[[package]]
 name = "azure-ai-translation-text"
 version = "1.0.0b1"
 source = { registry = "https://pypi.org/simple" }
@@ -1790,9 +1804,11 @@ dependencies = [
     { name = "azure-ai-inference" },
     { name = "azure-ai-projects" },
     { name = "azure-ai-textanalytics" },
+    { name = "azure-ai-translation-document" },
     { name = "azure-ai-translation-text" },
     { name = "azure-identity" },
     { name = "azure-search-documents" },
+    { name = "azure-storage-blob" },
     { name = "cohere" },
     { name = "langchain" },
     { name = "openai" },
@@ -1810,9 +1826,11 @@ requires-dist = [
     { name = "azure-ai-inference", specifier = ">=1.0.0b9" },
     { name = "azure-ai-projects", specifier = ">=1.0.0" },
     { name = "azure-ai-textanalytics", specifier = ">=5.3.0" },
+    { name = "azure-ai-translation-document", specifier = ">=1.1.0" },
     { name = "azure-ai-translation-text", specifier = ">=1.0.0b1" },
     { name = "azure-identity", specifier = ">=1.25.0" },
     { name = "azure-search-documents", specifier = ">=11.5.3" },
+    { name = "azure-storage-blob", specifier = ">=12.27.0" },
     { name = "cohere", specifier = ">=5.18.0" },
     { name = "langchain", specifier = ">=1.0.2" },
     { name = "openai", specifier = ">=1.109.1" },
