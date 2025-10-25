@@ -1,1 +1,1 @@
-from .user_function import get_resolution_english
+from .user_function import get_resolution_english, get_resolution_asked_language

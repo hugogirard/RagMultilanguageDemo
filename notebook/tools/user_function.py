@@ -45,11 +45,20 @@ search_client_english = SearchClient(
     index_name="translated"
 )
 
+search_client_asked_language = SearchClient(
+    endpoint=search_endpoint,
+    credential=AzureKeyCredential(search_api_key),
+    index_name="multilanguage"
+)
+
 client = AzureOpenAI(
     azure_endpoint=open_ai_endpoint,
     api_key=open_ai_key,
     api_version="2024-12-01-preview"
 )
+
+cohere_client = EmbeddingsClient(endpoint=cohere_endpoint,
+                                 credential=AzureKeyCredential(cohere_key))
 
 def format_result(results: SearchItemPaged[Dict]) -> List[CarFix]:
     documents:List[CarFix] = []
@@ -66,6 +75,75 @@ def format_result(results: SearchItemPaged[Dict]) -> List[CarFix]:
         documents.append(document)     
     
     return documents
+
+def _do_search(brand:str,model:str,fault:str,embedding:List[float],search_client:SearchClient) -> str:
+    try:
+        # Vectorize the vault
+        query = fault
+
+        # Fuzzy search
+        query = ""
+        if brand:
+            query = f"{brand.lower()}~"
+
+        if model:
+            query = query + f"{model.lower()}~"
+        
+        #query = f"{object_description.lower()}~ {object_type_description.lower()}~"
+
+        if len(query) == 0:
+            query=fault
+
+        vector_query = VectorizedQuery(vector=embedding, k_nearest_neighbors=50, fields="vector")
+
+        results = search_client.search(  
+            search_text=query,  
+            search_fields=['brand','model'],
+            vector_queries= [vector_query],
+            top=5
+        )  
+        
+        documents = format_result(results)
+
+        # Convert to JSON string for tool response
+        response_data = []
+        for item in documents:
+            response_data.append({
+                "id": item.id,
+                "score": item.score,
+                "brand": item.brand,
+                "model": item.model,
+                "fault": item.fault,
+                "fix": item.fix
+            })
+            
+        return json.dumps(response_data, indent=2)
+    except Exception as ex:
+        return ex        
+
+def get_resolution_asked_language(brand: str, model:str, fault:str) -> str:
+    """
+    This function searches for troubleshooting resolutions based on brand, model, and fault.
+
+    Args:
+        brand: Brand of the car
+        model: Model of the car
+        fault: Description of the problem/fault
+        
+    Returns:
+        TroubleShooting containing car troubleshooting documents
+    """
+
+    try:
+
+        response = cohere_client.embed(input=[fault],model=cohere_model)
+        embedding = response.data[0]['embedding']
+
+        return _do_search(brand,model,fault,embedding,search_client_asked_language)
+        
+    except Exception as ex:
+        return ex    
+
 
 def get_resolution_english(brand:str, model:str, fault:str) -> str:
     """
