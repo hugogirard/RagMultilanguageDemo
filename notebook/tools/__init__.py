@@ -1,0 +1,1 @@
+from .user_function import get_resolution_english
