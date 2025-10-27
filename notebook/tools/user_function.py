@@ -61,6 +61,16 @@ cohere_client = EmbeddingsClient(endpoint=cohere_endpoint,
                                  credential=AzureKeyCredential(cohere_key))
 
 def format_result(results: SearchItemPaged[Dict]) -> List[CarFix]:
+    """
+    Converts Azure Search results into a list of CarFix objects.
+    Iterates through search results and extracts relevant fields.
+    
+    Args:
+        results: Paginated search results from Azure Search
+        
+    Returns:
+        List of CarFix objects with structured troubleshooting data
+    """
     documents:List[CarFix] = []
     
     for result in results:
@@ -77,6 +87,21 @@ def format_result(results: SearchItemPaged[Dict]) -> List[CarFix]:
     return documents
 
 def _do_search(brand:str,model:str,fault:str,embedding:List[float],search_client:SearchClient) -> str:
+    """
+    Performs a hybrid search combining vector similarity and fuzzy text matching.
+    Builds a fuzzy query from brand/model, executes vector search on embeddings,
+    and returns top 5 results as JSON.
+    
+    Args:
+        brand: Car brand for filtering
+        model: Car model for filtering
+        fault: Fault description (used as fallback query)
+        embedding: Vector embedding for semantic search
+        search_client: Azure Search client instance
+        
+    Returns:
+        JSON string containing top 5 matching documents with scores
+    """
     try:
         # Vectorize the vault
         query = fault
@@ -123,7 +148,8 @@ def _do_search(brand:str,model:str,fault:str,embedding:List[float],search_client
 
 def get_resolution_asked_language(brand: str, model:str, fault:str) -> str:
     """
-    This function searches for troubleshooting resolutions based on brand, model, and fault.
+    Searches for troubleshooting resolutions in the user's requested language.
+    Uses Cohere embeddings for multilanguage support and searches the multilanguage index.
 
     Args:
         brand: Brand of the car
@@ -131,7 +157,7 @@ def get_resolution_asked_language(brand: str, model:str, fault:str) -> str:
         fault: Description of the problem/fault
         
     Returns:
-        TroubleShooting containing car troubleshooting documents
+        JSON string with troubleshooting documents in the requested language
     """
 
     try:
@@ -147,7 +173,8 @@ def get_resolution_asked_language(brand: str, model:str, fault:str) -> str:
 
 def get_resolution_english(brand:str, model:str, fault:str) -> str:
     """
-    This function searches for troubleshooting resolutions based on brand, model, and fault.
+    Searches for troubleshooting resolutions in English.
+    Uses Azure OpenAI embeddings and searches the English translated index.
 
     Args:
         brand: Brand of the car
@@ -155,7 +182,7 @@ def get_resolution_english(brand:str, model:str, fault:str) -> str:
         fault: Description of the problem/fault
         
     Returns:
-        TroubleShooting containing car troubleshooting documents
+        JSON string with English troubleshooting documents
     """
 
     try:
