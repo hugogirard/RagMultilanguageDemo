@@ -51,6 +51,12 @@ search_client_asked_language = SearchClient(
     index_name="multilanguage"
 )
 
+search_client_hybrid = SearchClient(
+    endpoint=search_endpoint,
+    credential=AzureKeyCredential(search_api_key),
+    index_name="translated_dual"    
+)
+
 client = AzureOpenAI(
     azure_endpoint=open_ai_endpoint,
     api_key=open_ai_key,
@@ -170,6 +176,99 @@ def get_resolution_asked_language(brand: str, model:str, fault:str) -> str:
     except Exception as ex:
         return ex    
 
+
+def get_resolution_hybrid(default_language_english:bool,
+                          brand:str, 
+                          model:str,
+                          brand_english:str,
+                          model_english:str, 
+                          fault:str, 
+                          fault_english:str,) -> str:
+    """.
+    Performs search in both the original language and English translation, combining        
+
+    Args:
+        default_language_english: Whether the default language is English (affects vectorization strategy)
+        brand: Car brand in the original language
+        model: Car model in the original language
+        brand_english: Car brand translated to English (only if original language is not english)
+        model_english: Car model translated to English (only if original language is not english)
+        fault: Fault description in the original language
+        fault_english: Fault description translated to English (only if original language is not english)
+        
+    Returns:
+        JSON string with troubleshooting documents in the requested language and
+        english if the original language was not in english
+    """    
+    try:
+
+        # Fuzzy search
+        query = ""
+        if brand:
+            query = f"{brand.lower()}~"
+
+        if brand_english:
+            query + f"{brand_english.lower()}~"
+
+        if model:
+            query = query + f"{model.lower()}~"
+
+        if model_english:
+            query = query + f"{model_english.lower()}~"            
+        
+        #query = f"{object_description.lower()}~ {object_type_description.lower()}~"
+
+        if len(query) == 0:
+            query=fault
+            if not default_language_english:
+                query = query + f"{fault_english}~"  
+
+
+        texts_to_vectorize:List[str] = []
+
+        # Always add the original text
+        texts_to_vectorize.append(fault)
+
+        # Validate if the default language is english
+        if not default_language_english:
+            texts_to_vectorize.append(fault_english)
+        
+        response = cohere_client.embed(input=texts_to_vectorize,model=cohere_model)
+
+        vector_queries:List[VectorizedQuery] = []
+
+        vector_queries.append(VectorizedQuery(vector=response.data[0]['embedding'], k_nearest_neighbors=50, fields="vector"))
+        
+        if not default_language_english:
+            vector_queries.append(VectorizedQuery(vector=response.data[1]['embedding'], k_nearest_neighbors=50, fields="vector_en"))
+
+        results = search_client_hybrid.search(  
+            search_text=query,  
+            search_fields=['brand','model','brand_en','model_en'],
+            vector_queries= vector_queries,
+            top=5
+        )  
+        
+        response_data = []
+        for result in results:
+            doc = {
+                'id':result['id'],
+                'score':result['@search.score'],
+                'brand':result['brand'],
+                'brand_en':result['brand_en'],
+                'model':result['model'],
+                'model_en':result['model_en'],
+                'fault':result['fault'],
+                'fault_en':result['fault_en'],
+                'fix':result['fix'],
+                'fix_en':result['fix_en']
+            }
+            response_data.append(doc)     
+        
+        return json.dumps(response_data, indent=2)
+
+    except Exception as ex:
+        return ex
 
 def get_resolution_english(brand:str, model:str, fault:str) -> str:
     """
