@@ -115,10 +115,10 @@ def _do_search(brand:str,model:str,fault:str,embedding:List[float],search_client
         # Fuzzy search
         query = ""
         if brand:
-            query = f"{brand.lower()}~"
+            query = f" {brand.lower()}~"
 
         if model:
-            query = query + f"{model.lower()}~"
+            query = query + f" {model.lower()}~"
         
         #query = f"{object_description.lower()}~ {object_type_description.lower()}~"
 
@@ -208,20 +208,20 @@ def get_resolution_hybrid(default_language_english:bool,
             query = f"{brand.lower()}~"
 
         if brand_english:
-            query + f"{brand_english.lower()}~"
+            query = query + f"{ brand_english.lower()}~"
 
         if model:
-            query = query + f"{model.lower()}~"
+            query = query + f"{ model.lower()}~"
 
         if model_english:
-            query = query + f"{model_english.lower()}~"            
+            query = query + f"{ model_english.lower()}~"            
         
         #query = f"{object_description.lower()}~ {object_type_description.lower()}~"
 
         if len(query) == 0:
             query=fault
             if not default_language_english:
-                query = query + f"{fault_english}~"  
+                query = query + f"{ fault_english}~"  
 
 
         texts_to_vectorize:List[str] = []
@@ -293,10 +293,10 @@ def get_resolution_english(brand:str, model:str, fault:str) -> str:
         # Fuzzy search
         query = ""
         if brand:
-            query = f"{brand.lower()}~"
+            query = f"{ brand.lower()}~"
 
         if model:
-            query = query + f"{model.lower()}~"
+            query = query + f"{ model.lower()}~"
         
         #query = f"{object_description.lower()}~ {object_type_description.lower()}~"
 
