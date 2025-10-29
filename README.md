@@ -102,7 +102,7 @@ This repository demonstrates three main approaches to handle these challenges:
 
 #### Strategy 1️⃣: Native Language Embeddings with Cohere (Multilanguage Index)
 
-**Approach**: Use Cohere's specialized multilingual embedding model (embed-v4.0) that can embed text in 100+ languages into the same vector space.
+**Approach**: Use Cohere's specialized multilingual embedding model (embed-v3-multilingual) that can embed text in 100+ languages into the same vector space.
 
 **Pros**:
 - ✅ No translation needed - preserves original meaning and nuances
@@ -137,7 +137,7 @@ This repository demonstrates three main approaches to handle these challenges:
 
 #### Strategy 3️⃣: Native Language Embeddings with OpenAI (Multi Language OpenAI Index)
 
-**Approach**: Use OpenAI's text-embedding-3-large model which has built-in multilingual capabilities to embed documents in their original language.
+**Approach**: Use OpenAI's text-embedding-3-large model which has built-in multilingual capabilities to embed documents in their original language. This model supports **100+ languages** with general-purpose multilingual support.
 
 **Pros**:
 - ✅ No translation needed - preserves original meaning
@@ -145,12 +145,12 @@ This repository demonstrates three main approaches to handle these challenges:
 - ✅ High-quality embeddings (1536 dimensions)
 - ✅ Simpler pipeline than translation-based approach
 - ✅ Good performance on major languages
+- ✅ Supports 100+ languages with varying levels of proficiency
 
 **Cons**:
 - ❌ Variable accuracy across different languages
 - ❌ Best for well-represented languages in training data
-- ❌ May underperform Cohere on low-resource languages
-- ❌ Less optimized for multilingual scenarios than Cohere
+- ❌ Not specifically designed for multilingual scenarios like Cohere's model
 
 **Best for**: Applications requiring high-quality embeddings for major languages with a simple implementation, where you want to use OpenAI for both embeddings and LLM responses.
 
@@ -160,16 +160,16 @@ This repository demonstrates three main approaches to handle these challenges:
 |---------|---------------|-------------------|---------------|
 | **Dimensions** | 1024 | 1536 | 1536 |
 | **Translation Required** | ❌ No | ✅ Yes | ❌ No |
-| **Language Support** | 100+ optimized | English only | 100+ variable |
+| **Language Support** | 100+ (multilingual-optimized) | English only | 100+ (general-purpose) |
 | **Setup Complexity** | Medium | High | Low |
-| **Best For** | Maximum multilingual accuracy | Consistent English quality | Simplified multilingual |
+| **Best For** | Multilingual-specific optimization | Consistent English quality | Simplified multilingual |
 | **Index Name** | `multilanguage` | `translated` | `multi_language_openai` |
 
 ---
 
 ## 🌟 Deep Dive: Cohere Embeddings for Multilingual RAG
 
-Strategy 1 (Native Language) leverages **Cohere's embed-v4.0** model, a best-in-class multilingual embedding solution that supports **over 100 languages** including Korean, Japanese, Arabic, Chinese, Spanish, French, and many more. Understanding how Cohere embeddings work is crucial for building effective multilingual RAG systems.
+Strategy 1 (Native Language) leverages **Cohere's embed-v3-multilingual** model, a specialized multilingual embedding solution specifically designed for cross-language scenarios. It supports **over 100 languages** including Korean, Japanese, Arabic, Chinese, Spanish, French, and many more. Understanding how Cohere embeddings work is crucial for building effective multilingual RAG systems.
 
 ### 🔑 The Power of `input_type` Parameter
 
@@ -227,20 +227,17 @@ sequenceDiagram
     
     Q->>D: Vector similarity search
     D->>R: Return most similar documents
-    
-    style Q fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
-    style D fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
 ```
 
 **Key Insight**: Using `search_document` for indexing and `search_query` for queries creates embeddings that are specifically tuned to work together, improving retrieval accuracy by **15-30%** compared to using generic embeddings.
 
 ### 🌍 Multilingual Support Architecture
 
-Cohere's embed-v4.0 uses a unified vector space for all 100+ languages, meaning semantically similar content in different languages will have similar embeddings:
+Cohere's embed-v3-multilingual uses a unified vector space for all 100+ languages, meaning semantically similar content in different languages will have similar embeddings:
 
 ```mermaid
 graph TB
-    A[Cohere embed-v4.0<br/>Multilingual Vector Space] --> B[English: 'Engine overheating']
+    A[Cohere embed-v3-multilingual<br/>Multilingual Vector Space] --> B[English: 'Engine overheating']
     A --> C[French: 'Surchauffe du moteur']
     A --> D[Spanish: 'Sobrecalentamiento del motor']
     A --> E[Japanese: 'エンジンの過熱']
@@ -285,9 +282,6 @@ sequenceDiagram
     
     VS->>R: Return ranked results
     R->>UF: Show best matches regardless of language
-    
-    style CE fill:#9B59B6,stroke:#7D3C98,stroke-width:2px,color:#fff
-    style VS fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
 ```
 
 ### 🎯 Implementation in This Demo
@@ -312,7 +306,7 @@ def embed_document(text: str, language: str):
     response = cohere_client.embed(
         input=[text],
         input_type="search_document",  # ← Optimized for being searched
-        model="embed-v4.0",
+        model="embed-v3-multilingual",
         embedding_types=["float"],
         output_dimension=1024
     )
@@ -326,7 +320,7 @@ def embed_query(query: str):
     response = cohere_client.embed(
         input=[query],
         input_type="search_query",  # ← Optimized for searching
-        model="embed-v4.0",
+        model="embed-v3-multilingual",
         embedding_types=["float"],
         output_dimension=1024
     )
@@ -346,39 +340,15 @@ query_vector = embed_query(query_fr)
 
 ### 📊 Cohere vs. OpenAI: Key Differences
 
-| Feature | Cohere embed-v4.0 | OpenAI text-embedding-ada-002 |
+| Feature | Cohere embed-v3-multilingual | OpenAI text-embedding-ada-002 |
 |---------|-------------------|-------------------------------|
-| **Languages Supported** | 100+ languages natively | Primarily English, limited multilingual |
-| **Vector Dimensions** | 256, 512, 1024, 1536 (Matryoshka) | 1536 (fixed) |
+| **Languages Supported** | 100+ languages (multilingual-optimized) | 100+ languages (general-purpose) |
+| **Vector Dimensions** | 1024 (fixed) | 1536 (fixed) |
 | **Input Type Optimization** | ✅ Yes (`search_document`, `search_query`) | ❌ No (generic embeddings) |
-| **Best Use Case** | Multilingual content, cross-language search | English-only or translated content |
-| **Cross-Language Performance** | ⭐⭐⭐⭐⭐ Excellent | ⭐⭐⭐ Good (after translation) |
-| **Cost per 1M tokens** | ~$0.10 | ~$0.13 |
+| **Best Use Case** | Multilingual-specific scenarios | English-only or general multilingual |
+| **Multilingual Design** | ⭐⭐⭐⭐⭐ Purpose-built for multilingual | ⭐⭐⭐⭐ Strong general capabilities |
 
-### 🔬 Performance: Same Language vs. Cross-Language
-
-```mermaid
-graph LR
-    A[Query Types] --> B[Same Language<br/>FR query → FR docs]
-    A --> C[Cross-Language<br/>FR query → JA docs]
-    
-    B --> D[Similarity: 0.89<br/>⭐⭐⭐⭐⭐]
-    C --> E[Similarity: 0.76<br/>⭐⭐⭐⭐]
-    
-    style A fill:#9B59B6,stroke:#7D3C98,stroke-width:2px,color:#fff
-    style B fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
-    style C fill:#3498DB,stroke:#2874A6,stroke-width:2px,color:#fff
-    style D fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
-    style E fill:#F39C12,stroke:#D68910,stroke-width:2px,color:#fff
-```
-
-**Key Findings from Our Testing**:
-- **Same-language retrieval**: 85-92% similarity scores
-- **Cross-language retrieval**: 72-82% similarity scores
-- **Performance degradation**: Only 10-15% when crossing languages
-- **Language pairs matter**: Romance languages (FR, ES, IT) have better cross-retrieval than distant pairs (EN ↔ HE)
-
-### 💡 Best Practices for Using Cohere Embeddings
+ ### 💡 Best Practices for Using Cohere Embeddings
 
 1. **Always use the correct `input_type`**
    ```python
@@ -389,59 +359,28 @@ graph LR
    # ❌ WRONG - Don't use same type for both
    doc_embedding = cohere_client.embed(input=[doc], input_type="search_query")
    ```
-
-2. **Choose appropriate dimensions**
-   - Use **1024** for most cases (best quality/cost balance)
-   - Use **512** for memory-constrained environments
-   - Use **1536** when you need maximum precision
-
-3. **Batch your embeddings**
-   ```python
-   # ✅ Efficient - batch multiple documents
-   embeddings = cohere_client.embed(
-       input=[doc1, doc2, doc3, ...],  # Up to 96 items
-       input_type="search_document"
-   )
-   ```
-
-4. **Language detection is optional**
+2. **Language detection is optional**
    - Cohere automatically handles language detection
    - No need to specify language per document
    - The model works across all 100+ languages simultaneously
 
-5. **Consider compression for large-scale deployments**
-   ```python
-   # Use int8 compression for 4x storage savings
-   response = cohere_client.embed(
-       input=[text],
-       input_type="search_document",
-       embedding_types=["int8"],  # or "ubinary" for 32x savings
-       output_dimension=1024
-   )
-   ```
+### 🎯 When to Choose Multi-Language Embeddings vs. Translation
 
-### 🎯 When to Choose Cohere (Strategy 1) vs. Translation (Strategy 2)
-
-**Choose Cohere Native Language** when:
+**Choose Multi-Language Embeddings (Native Language)** when:
 - ✅ You have truly multilingual content with no dominant language
 - ✅ Preserving original text nuances is critical
 - ✅ Users query in various languages unpredictably
 - ✅ You want to avoid translation costs and latency
-- ✅ Your languages are well-supported by Cohere (check the [100+ supported languages](https://docs.cohere.com/docs/embeddings))
+- ✅ Your languages are well-supported by your embedding model (Cohere supports [100+ languages](https://docs.cohere.com/docs/embeddings), OpenAI supports 100+ languages)
+- ✅ You prefer a simpler pipeline without translation steps
 
 **Choose Translation to English** when:
 - ✅ You need consistency and predictability across all languages
 - ✅ Your primary language is English with occasional other languages
 - ✅ You have static content that can be batch-translated
 - ✅ You need extensive debugging and evaluation (English tools are better)
-- ✅ OpenAI embeddings significantly outperform on your specific domain
-
-### 📚 Learn More
-
-- 📘 [Cohere Embeddings Documentation](https://docs.cohere.com/docs/embeddings)
-- 📘 [Cohere Semantic Search Guide](https://docs.cohere.com/docs/semantic-search-embed)
-- 📘 [Multilingual Embeddings Best Practices](https://docs.cohere.com/docs/multimodal-embeddings)
-- 📘 [MTEB Multilingual Leaderboard](https://huggingface.co/spaces/mteb/leaderboard)
+- ✅ You want to leverage the best English-trained embedding models
+- ✅ You can afford the translation costs and acceptable latency for your use case
 
 ---
 
@@ -451,7 +390,7 @@ Based on guidance from Microsoft Azure Search and Azure AI teams, here are key r
 
 #### 🎯 Analyze Your Specific Use Case
 
-> "The best approach is to understand what works best for your customer by analyzing a representative customer data sample and quickly building a POC. This helps evaluate both quality and pricing trade-offs."
+> "The best approach is to understand what works best for you by analyzing a representative data sample and quickly building a POC. This helps evaluate both quality and pricing trade-offs."
 
 **Key Questions to Ask**:
 1. What languages do your users speak?
@@ -471,18 +410,6 @@ This approach ensures:
 - ✅ Clear separation of strategies for easy comparison
 - ✅ Flexibility to choose the best strategy for your use case
 - ✅ Ability to test and benchmark different approaches
-
-#### 🌐 Check Language Support
-
-Refer to [Azure AI Search Language Support](https://learn.microsoft.com/en-us/azure/search/search-language-support) for details on:
-- Which languages have built-in analyzers
-- Language-specific tokenization and stemming
-- Text translation capabilities via Azure AI Translator
-
-For languages **not supported** by your chosen embedding model:
-- Use a high-performing benchmark model for supported languages
-- Translate unsupported languages to a supported language (typically English)
-- Use the same embedding model for consistency
 
 #### 🔄 Translation Strategy
 
@@ -513,15 +440,6 @@ Understand your requirements:
 - **Quality vs. cost trade-off**: Premium models vs. budget constraints
 - **Latency requirements**: Real-time vs. batch processing acceptable
 
-### 🎓 Learning Resources
-
-To dive deeper into multilingual RAG systems, we recommend these resources:
-
-- 📘 [Azure AI Search - Language Support](https://learn.microsoft.com/en-us/azure/search/search-language-support)
-- 📘 [Building and Evaluating Multilingual RAG Systems](https://medium.com/data-science-at-microsoft/building-and-evaluating-multilingual-rag-systems-943c290ab711)
-- 📘 [Azure AI Translator Documentation](https://learn.microsoft.com/en-us/azure/ai-services/translator/language-support)
-- 📘 [Multilingual Text Embedding Models](https://huggingface.co/spaces/mteb/leaderboard)
-
 ---
 
 ## ☁️ Azure Resources Required
@@ -532,22 +450,18 @@ To run this demo, you need to create the following Azure resources:
 
 - **🔍 Azure AI Search**
   - For indexing and searching multilingual documents
-  - Three indexes used:
-    - `multilanguage` - Native language embeddings with Cohere (1024 dimensions)
-    - `translated` - English-translated embeddings with OpenAI (1536 dimensions)
-    - `multi_language_openai` - Native language embeddings with OpenAI text-embedding-3-large (1536 dimensions)
 
 - **🤖 Azure OpenAI Service**
   - For generating embeddings and AI agent responses
   - Models required:
     - `text-embedding-3-large` - For multilingual embeddings (supports 100+ languages)
-    - `gpt-4o` or `gpt-4` - For AI agent reasoning and response generation
+    - `gpt model` - For AI agent reasoning and response generation
 
-- **🌍 Azure AI Language Service**
+- **🌍 Azure AI Language Service (included in AI Foundry)**
   - For language detection on multilingual documents
   - Used to identify document language before embedding
 
-- **🔄 Azure AI Translator**
+- **🔄 Azure AI Translator (included in AI Foundry)**
   - For translating documents to English in the translation-based approach
   - Supports batch document translation
 
@@ -555,10 +469,9 @@ To run this demo, you need to create the following Azure resources:
   - For temporary storage during document translation
   - Blob containers used for upload/download of translated documents
 
-- **🔐 Cohere API (via Azure AI Studio)**
-  - For multilingual embeddings using Cohere's embed-v4.0 model
-  - Supports 100+ languages with high-quality semantic embeddings
-  - Access through Azure AI Studio Model Catalog
+- **🔐 Cohere API (via Azure AI Foundry or Github Model)**
+  - For multilingual embeddings using Cohere's embed-v3-multilingual model
+  - Specifically designed for multilingual scenarios with 100+ languages
 
 ### Optional Services
 
@@ -632,42 +545,6 @@ graph TB
   }
 ]
 ```
-
-### 🔍 Search Strategy
-
-The API implements a **hybrid search approach** combining:
-
-1. **🧮 Vector Search (Semantic)**: 
-   - Generates embeddings for the fault description using OpenAI text-embedding-3-large
-   - Performs k-nearest neighbors search (k=50) in vector space
-   - Captures semantic similarity across languages
-
-2. **📝 Fuzzy Text Search**:
-   - Uses Azure Search's fuzzy matching (`~` operator) on brand and model fields
-   - Handles typos and variations in brand/model names
-   - Example: "Toyot~" matches "Toyota"
-
-3. **🔀 Hybrid Ranking**:
-   - Combines semantic and lexical scores
-   - Returns top 5 most relevant results
-   - Balances semantic understanding with exact matching
-
-### 🌍 Multilingual Support
-
-The API leverages the **OpenAI text-embedding-3-large** model which provides:
-
-- ✅ **Native multilingual support** - Over 100 languages
-- ✅ **No translation required** - Embed queries in any language
-- ✅ **Cross-language search** - Query in one language, find results in another
-- ⚠️ **Language-dependent accuracy** - Performance varies by language and dataset
-
-**Important Note**: While OpenAI embeddings support multiple languages, accuracy can vary:
-- **Best performance**: English, Spanish, French, German, Italian, Portuguese
-- **Good performance**: Major languages (Chinese, Japanese, Korean, Arabic)
-- **Variable performance**: Low-resource languages
-
-For maximum accuracy across all languages, consider using the Cohere-based approach (`indexing_multilanguage_cohere.ipynb`) which is specifically optimized for multilingual scenarios.
-
 ### 🐳 Deployment
 
 The API is containerized and ready for production deployment:
@@ -700,42 +577,6 @@ docker push <your-registry>.azurecr.io/car-fix-api:latest
 - Swagger UI available at: `https://<your-app>.azurewebsites.net/docs`
 - API endpoint: `https://<your-app>.azurewebsites.net/api/car/fix`
 
-### 🔧 Configuration
-
-Environment variables required (create a `.env` file or configure in App Service):
-
-```env
-# Azure AI Search
-SEARCH_ENDPOINT=https://your-service.search.windows.net
-SEARCH_API_KEY=your-admin-key
-SEARCH_INDEX_NAME=multi_language_openai
-
-# Azure OpenAI
-OPENAI_ENDPOINT=https://your-service.openai.azure.com
-OPENAI_KEY=your-api-key
-EMBEDDING_OPENAI_DEPLOYMENT=text-embedding-3-large
-```
-
-### 🤝 Integration Examples
-
-**AI Agent Tool Definition**:
-```python
-{
-  "name": "search_car_problems",
-  "description": "Search for car troubleshooting solutions based on brand, model, and fault description",
-  "parameters": {
-    "brand": "string",
-    "model": "string", 
-    "fault": "string"
-  }
-}
-```
-
-**Copilot Studio Custom Connector**:
-- Import OpenAPI spec from `/docs` endpoint
-- Configure authentication (API key or Azure AD)
-- Use in conversational flows to provide car troubleshooting assistance
-
 ---
 
 ## 📓 Notebooks Overview
@@ -760,16 +601,6 @@ graph LR
     style E fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
     style F fill:#50E3C2,stroke:#2ECC71,stroke-width:2px,color:#000
     style G fill:#F39C12,stroke:#D68910,stroke-width:2px,color:#fff
-```
-    D --> E
-    E --> F[6️⃣ Build Agent]
-    
-    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
-    style B fill:#F5A623,stroke:#D68910,stroke-width:2px,color:#fff
-    style C fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
-    style D fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
-    style E fill:#50E3C2,stroke:#2ECC71,stroke-width:2px,color:#000
-    style F fill:#F39C12,stroke:#D68910,stroke-width:2px,color:#fff
 ```
 
 ### 1️⃣ `generate.data.ipynb` - Dataset Generation
@@ -798,7 +629,7 @@ graph LR
 - 📐 Configures three index schemas with different multilingual approaches:
   - **`multilanguage`**: Native language vectors using Cohere (1024-dim)
   - **`translated`**: English-translated vectors using OpenAI (1536-dim)
-  - **`multi_language_openai`**: Native language vectors using OpenAI text-embedding-3-large (3072-dim)
+  - **`multi_language_openai`**: Native language vectors using OpenAI text-embedding-3-large (1056-dim)
 - 🔍 Sets up HNSW vector search for efficient semantic matching
 - 🏷️ Configures faceted navigation and filtering capabilities
 - 🔧 Defines field mappings and search configurations
@@ -825,16 +656,16 @@ graph LR
 - 📖 Reads the multilingual dataset from Excel
 - 🌍 Uses Azure AI Language to detect the language of each document
 - ✅ Validates that all languages are supported by Cohere (100+ languages)
-- 🧮 Generates embeddings using Cohere's embed-v4.0 model (1024 dimensions)
+- 🧮 Generates embeddings using Cohere's embed-v3-multilingual model (1024 dimensions)
 - 📤 Uploads documents with native language vectors to Azure AI Search
 
 **When to run**: Execute this **after creating indexes** to populate the `multilanguage` index.
 
 **Key Features**:
 - No translation required
-- Optimized for multilingual scenarios
+- Purpose-built for multilingual scenarios
 - Uses `search_document` input type for optimal retrieval
-- Best accuracy for low-resource languages
+- Designed specifically for cross-language semantic search
 
 **Output**: Populated `multilanguage` index ready for semantic search
 
@@ -872,7 +703,7 @@ graph LR
 - 🔄 Uses Azure Document Translation to translate all content to English
 - ⏳ Polls for translation completion
 - 📥 Downloads the translated documents
-- 🧮 Generates embeddings using Azure OpenAI (text-embedding-ada-002, 1536 dimensions)
+- 🧮 Generates embeddings using Azure OpenAI (1536 dimensions)
 - 📤 Uploads documents with English vectors to Azure AI Search
 
 **When to run**: Execute this **after creating indexes** to populate the `translated` index.
@@ -886,30 +717,7 @@ graph LR
 
 ---
 
-### 6️⃣ `search_multilanguage.ipynb` - Search & Testing
-
-**Purpose**: Tests and compares multilingual search capabilities across all three indexing strategies.
-
-**What it does**:
-- 🔍 Executes sample queries in different languages
-- 📊 Compares retrieval results from all three indexes
-- 📈 Demonstrates vector similarity search
-- 🌐 Shows how to retrieve results in original or translated format
-- 💬 Tests cross-language retrieval scenarios
-
-**When to run**: Execute this **after indexing documents** to test and compare search quality across strategies.
-
-**Key Test Scenarios**:
-- Same language query (e.g., French query → French documents)
-- Cross-language query (e.g., English query → Japanese documents)
-- Quality comparison between all three strategies
-- Performance metrics and accuracy analysis
-
-**Output**: Performance insights and comparison metrics across all indexing approaches
-
----
-
-### 7️⃣ `agent.ipynb` - AI Agent Implementation
+### 6️⃣ `agent.ipynb` - AI Agent Implementation
 
 **Purpose**: Builds intelligent AI agents that handle multilingual car troubleshooting queries using Azure AI Foundry.
 
@@ -933,31 +741,6 @@ graph LR
 
 ---
 
-## 🎯 Comparison of Strategies
-
-| Strategy | Embedding Model | Translation | Storage Cost | Query Latency | Best For |
-|----------|----------------|-------------|--------------|---------------|----------|
-| **1️⃣ Native Language** | Cohere (1024-dim) | ❌ None | 💰 Low | ⚡ Fast | Languages well-supported by Cohere |
-| **2️⃣ English Translation** | OpenAI (1536-dim) | ✅ Batch | 💰 Low | ⚡ Fast | Leveraging top English models |
-
-### When to Use Each Strategy
-
-**Strategy 1 - Native Language** 🌐
-- ✅ Your embedding model supports all your languages well
-- ✅ You want to preserve original text nuances
-- ✅ Budget is limited
-- ✅ Simple architecture is preferred
-- ✅ Query language typically matches document language
-
-**Strategy 2 - English Translation** 🔄
-- ✅ English embedding models perform significantly better
-- ✅ Static document collection that can be batch-translated
-- ✅ You need consistent quality across all languages
-- ✅ Evaluation and benchmarking are important
-- ✅ Cross-language queries are common
-
----
-
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -974,11 +757,6 @@ Before running the notebooks, ensure you have the following:
 - ✅ Azure AI Foundry Project (for agents)
 
 #### 2. **Python Environment** 🐍
-
-```bash
-Python 3.10+
-pip install -r pyproject.toml
-```
 
 Required packages:
 - `azure-search-documents`
@@ -1016,16 +794,16 @@ STORAGE_ACCOUNT_KEY=your-storage-key
 # Cohere (via Azure AI)
 COHERE_ENDPOINT=https://your-cohere.inference.ai.azure.com
 COHERE_KEY=your-cohere-key
-COHERE_MODEL=cohere-embed-v3-multilingual
+COHERE_MODEL=
 
 # Azure OpenAI
 AI_FOUNDRY_OPENAI_ENDPOINT=https://your-openai.openai.azure.com/
 OPENAI_KEY=your-openai-key
-OPEN_AI_CHAT_MODEL=gpt-4
-EMBEDDING_MODEL=text-embedding-ada-002
+OPEN_AI_CHAT_MODEL=
+EMBEDDING_MODEL=
 
 # Azure AI Foundry (for agents)
-AI_FOUNDRY_PROJECT_ENDPOINT=https://your-project.api.azureml.ms
+AI_FOUNDRY_PROJECT_ENDPOINT=
 ```
 
 ### Execution Order
@@ -1039,576 +817,13 @@ graph TB
     B --> C[🌐 3. indexing_multilanguage.ipynb<br/>Strategy 1]
     B --> D[🔄 4. indexing_translate_english.ipynb<br/>Strategy 2]
     
-    C --> E[🔍 5. search_multilanguage.ipynb<br/>Test & Compare]
+    C --> E[🤖 5. agent.ipynb<br/>Build AI Agents]
     D --> E
-    
-    E --> F[🤖 6. agent.ipynb<br/>Build AI Agents]
     
     style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px,color:#fff
     style B fill:#F5A623,stroke:#D68910,stroke-width:3px,color:#fff
     style C fill:#27AE60,stroke:#1E8449,stroke-width:3px,color:#fff
     style D fill:#E74C3C,stroke:#C0392B,stroke-width:3px,color:#fff
-    style E fill:#50E3C2,stroke:#2ECC71,stroke-width:3px,color:#000
-    style F fill:#F39C12,stroke:#D68910,stroke-width:3px,color:#fff
+    style E fill:#F39C12,stroke:#D68910,stroke-width:3px,color:#fff
 ```
-
-**Quick Start Steps**:
-
-1. **Generate Data** (5 minutes)
-   ```bash
-   jupyter notebook generate.data.ipynb
-   # Run all cells to create car_problems_multilingual.xlsx
-   ```
-
-2. **Create Indexes** (2 minutes)
-   ```bash
-   jupyter notebook create-index.ipynb
-   # Run all cells to create two search indexes
-   ```
-
-3. **Index Documents** (15-20 minutes total)
-   ```bash
-   # Choose one or both strategies
-   jupyter notebook indexing_multilanguage.ipynb        # Strategy 1
-   jupyter notebook indexing_translate_english.ipynb    # Strategy 2
-   ```
-
-4. **Test Search** (5 minutes)
-   ```bash
-   jupyter notebook search_multilanguage.ipynb
-   # Run queries and compare results
-   ```
-
-5. **Build Agents** (10 minutes)
-   ```bash
-   jupyter notebook agent.ipynb
-   # Test AI agents with function calling
-   ```
-
 ---
-
-## 📊 Dataset Overview
-
-The generated dataset simulates real-world multilingual support scenarios:
-
-### Dataset Composition
-
-```mermaid
-pie title Language Distribution (60 Records)
-    "English 🇬🇧" : 14.3
-    "French 🇫🇷" : 14.3
-    "Spanish 🇪🇸" : 14.3
-    "Japanese 🇯🇵" : 14.3
-    "Chinese 🇨🇳" : 14.3
-    "Greek 🇬🇷" : 14.3
-    "Hebrew 🇮🇱" : 14.3
-```
-
-**Key Statistics**:
-- 📝 **60 total records** across 7 languages
-- 🏭 **5 car brands**: Toyota, Honda, BMW, Ford, Tesla
-- 🚗 **10 models**: 2 per brand
-- ⚠️ **3 problem types**: Engine overheating, brake noise, battery drain
-- 🌍 **7 languages**: English, French, Spanish, Japanese, Chinese, Greek, Hebrew
-- ✍️ **Natural variations**: Includes grammatical imperfections and colloquialisms
-
-**Each Record Contains**:
-```json
-{
-  "id": "unique-identifier",
-  "problem": "User's car problem description (multilingual)",
-  "solution": "Technical solution steps (multilingual)",
-  "brand": "Toyota",
-  "model": "Camry",
-  "year": 2022,
-  "language": "fr",
-  "problem_type": "engine_overheating"
-}
-```
-
----
-
-## 🧪 Key Experiments & Insights
-
-### Experiment 1: Cross-Language Retrieval Quality
-
-**Question**: How well does each strategy handle queries in a different language than the documents?
-
-**Test Scenario**: English query → Japanese document
-
-**Results**:
-| Strategy | Retrieval Success | Avg. Similarity Score | Comments |
-|----------|------------------|----------------------|----------|
-| Native Language | ✅ Good | 0.72 | Multilingual model handles well |
-| English Translation | ✅ Better | 0.78 | Query translation improves results |
-
-**Key Insight**: Translation strategy provides more consistent cross-language retrieval when query translation is implemented.
-
----
-
-### Experiment 2: Embedding Quality by Language Script
-
-**Question**: Does the writing system affect embedding quality?
-
-**Results**:
-```mermaid
-graph LR
-    A[Language Scripts] --> B[Latin: EN, FR, ES]
-    A --> C[East Asian: JP, CN]
-    A --> D[Non-Latin: GR, HE]
-    
-    B --> E[High Quality<br/>All Models]
-    C --> F[Better with<br/>Cohere]
-    D --> G[Mixed Results<br/>Translation Helps]
-    
-    style B fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
-    style C fill:#F5A623,stroke:#D68910,stroke-width:2px,color:#fff
-    style D fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
-```
-
-**Key Insight**: Script type significantly impacts embedding quality, especially for native language strategy.
-
----
-
-### Experiment 3: Cost-Performance Analysis
-
-**Question**: What's the total cost of ownership for each strategy?
-
-**Cost Breakdown** (for 10,000 documents, 1M queries/month):
-
-| Component | Strategy 1 | Strategy 2 |
-|-----------|-----------|-----------|
-| **Indexing** |  |  |
-| Translation | $0 | $150 |
-| Embeddings | $80 | $120 |
-| **Querying** |  |  |
-| Query Embeddings | $40 | $40 |
-| Translation | $0 | $60 |
-| **Storage** |  |  |
-| Vector Storage | $50 | $75 |
-| **Total/Month** | **$170** | **$445** |
-
-**Key Insight**: Native language is most cost-effective, while translation strategy offers better quality at higher cost.
-
----
-
-### Experiment 4: Latency Comparison
-
-**Average Query Latency** (p95):
-
-```mermaid
-graph LR
-    A[Query] --> B{Strategy}
-    B -->|Native| C[180ms<br/>⚡ Fastest]
-    B -->|English| D[240ms<br/>⚡ Fast]
-    
-    style C fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
-    style D fill:#F5A623,stroke:#D68910,stroke-width:2px,color:#fff
-```
-
-**Key Insight**: Both strategies meet typical latency requirements (<500ms), with native language being slightly faster.
-
----
-
-## 💡 Best Practices & Recommendations
-
-### ✅ Do's
-
-1. **Start with a POC** 🧪
-   - Test all three strategies with your actual data
-   - Measure quality and cost trade-offs
-   - Involve native speakers in evaluation
-
-2. **Understand Your Data** 📊
-   - Analyze language distribution
-   - Identify domain-specific terminology
-   - Document language consistency requirements
-
-3. **Check Model Support** 🔍
-   - Review [MTEB leaderboard](https://huggingface.co/spaces/mteb/leaderboard) for embedding model benchmarks
-   - Verify language support in [Azure AI Search](https://learn.microsoft.com/en-us/azure/search/search-language-support)
-   - Test with representative samples
-
-4. **Use Batch Processing** ⚡
-   - Translate documents offline (not queries)
-   - Cache embeddings
-   - Precompute vectors where possible
-
-5. **Implement Monitoring** 📈
-   - Track language consistency
-   - Monitor retrieval quality per language
-   - Measure translation accuracy
-   - Log cost metrics
-
-6. **Design for Scale** 🚀
-   - Use async operations for embeddings
-   - Implement retry logic with exponential backoff
-   - Consider Azure Front Door for geo-distribution
-
-### ❌ Don'ts
-
-1. **Don't skip evaluation** - Quality varies significantly across languages
-2. **Don't assume** - Test multilingual models on your specific languages
-3. **Don't over-engineer** - Choose the strategy that fits your specific use case
-4. **Don't ignore costs** - Monitor embedding and translation API usage
-5. **Don't forget language detection** - Essential for routing and consistency
-6. **Don't translate everything** - Some content (brand names, technical terms) should stay original
-
----
-
-## 🔧 Troubleshooting
-
-### Common Issues & Solutions
-
-#### Issue 1: Language Detection Returns Wrong Language
-
-**Symptoms**: Documents tagged with incorrect language codes
-
-**Causes**:
-- Text too short (< 20 words)
-- Mixed-language content
-- Code or technical jargon
-
-**Solutions**:
-```python
-# Ensure sufficient text length
-if len(text.split()) < 20:
-    # Use metadata or default language
-    
-# Handle mixed content
-# Detect primary language from first paragraph
-```
-
----
-
-#### Issue 2: Poor Search Results in Non-English
-
-**Symptoms**: Low relevance scores for non-English queries
-
-**Diagnostic Steps**:
-1. Check embedding model language support
-2. Verify vector dimensions are correct
-3. Test with English translation
-
-**Solutions**:
-```python
-# Option 1: Translate queries to English
-# Option 2: Use language-specific analyzers
-# Option 3: Switch to English translation strategy
-```
-
----
-
-#### Issue 3: Agent Responds in Wrong Language
-
-**Symptoms**: Response language doesn't match query language
-
-**Causes**:
-- Insufficient language instruction in system prompt
-- LLM defaulting to English
-- Language detection failure
-
-**Solutions**:
-```python
-# Add explicit language instruction
-system_prompt = f"""
-You are a car troubleshooting assistant.
-CRITICAL: Respond in the same language as the user's question.
-User's language: {detected_language}
-"""
-```
-
----
-
-#### Issue 4: Translation Costs Too High
-
-**Symptoms**: Unexpected Azure Translator bills
-
-**Causes**:
-- Real-time query translation
-- Translating already-translated content
-- Not caching translations
-
-**Solutions**:
-```python
-# Implement caching
-translation_cache = {}
-
-def get_translation(text, target_lang):
-    cache_key = f"{text}:{target_lang}"
-    if cache_key in translation_cache:
-        return translation_cache[cache_key]
-    
-    translated = azure_translator.translate(text, target_lang)
-    translation_cache[cache_key] = translated
-    return translated
-```
-
----
-
-#### Issue 5: Slow Indexing Performance
-
-**Symptoms**: Indexing takes hours for thousands of documents
-
-**Causes**:
-- Sequential processing
-- Not using batch operations
-- Network latency
-
-**Solutions**:
-```python
-import asyncio
-
-# Use async batch operations
-async def batch_embed(documents, batch_size=25):
-    tasks = []
-    for i in range(0, len(documents), batch_size):
-        batch = documents[i:i+batch_size]
-        tasks.append(embedding_client.embed(batch))
-    
-    results = await asyncio.gather(*tasks)
-    return results
-```
-
----
-
-## 📈 Performance Metrics & KPIs
-
-### Monitor These Metrics in Production
-
-#### 1. **Retrieval Quality Metrics** 🎯
-
-```python
-# Precision at K
-def precision_at_k(retrieved, relevant, k=5):
-    retrieved_k = retrieved[:k]
-    return len(set(retrieved_k) & set(relevant)) / k
-
-# Mean Reciprocal Rank
-def mrr(retrieved_lists, relevant_lists):
-    reciprocal_ranks = []
-    for retrieved, relevant in zip(retrieved_lists, relevant_lists):
-        for i, doc in enumerate(retrieved):
-            if doc in relevant:
-                reciprocal_ranks.append(1 / (i + 1))
-                break
-    return sum(reciprocal_ranks) / len(reciprocal_ranks)
-```
-
-**Track per language**:
-- Precision@5: Target > 0.80 for all languages
-- Recall@10: Target > 0.90 for all languages
-- MRR: Target > 0.85 overall
-
-#### 2. **Translation Quality Metrics** 🔄
-
-```python
-# BLEU Score for translation quality
-from nltk.translate.bleu_score import sentence_bleu
-
-def evaluate_translation(reference, candidate):
-    return sentence_bleu([reference.split()], candidate.split())
-```
-
-**Track per language pair**:
-- BLEU score: Target > 0.50
-- Human evaluation: Sample 100 translations/month
-- Error rate: Target < 5%
-
-#### 3. **Language Consistency** ✅
-
-```python
-from lingua import LanguageDetectorBuilder, Language
-
-def check_language_consistency(query_lang, response):
-    detector = LanguageDetectorBuilder.from_all_languages().build()
-    detected = detector.detect_language_of(response)
-    return detected.iso_code_639_1.name.lower() == query_lang.lower()
-```
-
-**Track**:
-- Consistency rate: Target > 98%
-- False positive rate: < 2%
-
-#### 4. **Operational Metrics** ⚡
-
-**Latency** (milliseconds):
-```python
-# Target latencies (p95)
-targets = {
-    "embedding_generation": 100,
-    "vector_search": 50,
-    "translation": 200,
-    "total_query": 500
-}
-```
-
-**Cost per Query**:
-```python
-# Calculate cost per query
-cost_breakdown = {
-    "embedding": embedding_tokens * price_per_1k,
-    "translation": chars * price_per_1m,
-    "search": queries * price_per_1k,
-}
-```
-
-**Storage Utilization**:
-- Index size: Monitor growth rate
-- Vector count: Track per index
-- Storage cost: $/GB/month
-
----
-
-## 🌟 Next Steps & Extensions
-
-After completing these notebooks, consider these enhancements:
-
-### 🚀 Production Deployment
-
-1. **Azure Functions** - Deploy search as serverless API
-2. **Azure Container Apps** - Host agents with auto-scaling
-3. **Azure API Management** - Add rate limiting and monitoring
-4. **Azure Front Door** - Global CDN for low latency
-
-### 🌍 Expand Language Coverage
-
-```python
-# Add more languages
-additional_languages = [
-    "ko",  # Korean
-    "ar",  # Arabic
-    "hi",  # Hindi
-    "pt",  # Portuguese
-    "ru",  # Russian
-]
-```
-
-### 🎯 Fine-Tune Models
-
-1. **Custom embeddings** - Train domain-specific models
-2. **Custom translation** - Use Azure Custom Translator
-3. **Fine-tuned LLM** - Specialize for automotive domain
-
-### ⚡ Optimize Performance
-
-```python
-# Implement caching layer
-from azure.core.caching import HttpCache
-
-# Add Redis for distributed caching
-import redis
-cache = redis.Redis(host='your-redis.redis.cache.windows.net')
-```
-
-### 📊 Add Evaluation Pipeline
-
-```python
-# Automated quality monitoring
-def evaluate_system():
-    # Generate synthetic queries
-    # Run through system
-    # Calculate metrics
-    # Alert if quality drops
-    pass
-```
-
-### 💰 Cost Optimization
-
-1. **Smart routing** - Use cheaper strategy when quality is sufficient
-2. **Caching** - Cache embeddings and translations
-3. **Batch processing** - Combine operations where possible
-4. **Reserved capacity** - Use Azure reservations for predictable workloads
-
----
-
-## 📚 Additional Resources
-
-### Official Documentation
-
-- 📘 [Azure AI Search Documentation](https://learn.microsoft.com/en-us/azure/search/)
-- 📘 [Azure AI Language Support](https://learn.microsoft.com/en-us/azure/search/search-language-support)
-- 📘 [Azure AI Translator](https://learn.microsoft.com/en-us/azure/ai-services/translator/)
-- 📘 [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/)
-- 📘 [Azure AI Foundry](https://learn.microsoft.com/en-us/azure/ai-studio/)
-
-### Research & Articles
-
-- 📄 [Building Multilingual RAG Systems (Microsoft)](https://medium.com/data-science-at-microsoft/building-and-evaluating-multilingual-rag-systems-943c290ab711)
-- 📄 [Multilingual Information Retrieval](https://arxiv.org/pdf/2209.01335)
-- 📄 [MTEB Leaderboard](https://huggingface.co/spaces/mteb/leaderboard)
-
-### Community & Support
-
-- 💬 [Azure AI Search Q&A](https://learn.microsoft.com/en-us/answers/tags/133/azure-search)
-- 💬 [Azure OpenAI Community](https://techcommunity.microsoft.com/category/ai/azure-openai)
-- 🐛 [Report Issues](https://github.com/Azure/azure-search-vector-samples)
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Here are areas where you can help:
-
-### 🎯 Priority Areas
-
-1. **Add More Languages** 🌍
-   - Extend to 20+ languages
-   - Test with right-to-left languages
-   - Add language-specific analyzers
-
-2. **Improve Evaluation** 📊
-   - Create standardized test sets
-   - Add more quality metrics
-   - Implement A/B testing framework
-
-3. **Optimize Performance** ⚡
-   - Benchmark different embedding models
-   - Test caching strategies
-   - Profile and optimize bottlenecks
-
-4. **Enhance Documentation** 📝
-   - Add more code examples
-   - Create video tutorials
-   - Translate documentation
-
-5. **Build Evaluation Tools** 🔧
-   - Automated quality testing
-   - Cost calculator
-   - Performance profiler
-
-### How to Contribute
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Submit a pull request
-5. Update documentation
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- Azure AI Search team for multilingual capabilities
-- Microsoft Research for RAG best practices
-- Community contributors and testers
-
----
-
-## 📬 Contact & Support
-
-- 💼 **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
-- 📧 **Email**: your-email@example.com
-
----
-
-**Built with ❤️ using Azure AI Services**
-
-*Last Updated: October 2025*
