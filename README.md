@@ -9,10 +9,11 @@ Welcome to the **Multilingual RAG Demo** repository! This project provides a com
 This repository contains a complete end-to-end implementation showing:
 
 1. **Data Generation**: Creating realistic multilingual datasets that simulate real-world scenarios
-2. **Index Strategies**: Two different approaches to handling multilingual content in Azure AI Search
-3. **Vector Embeddings**: Comparing native language embeddings vs. translated embeddings
+2. **Index Strategies**: Three different approaches to handling multilingual content in Azure AI Search
+3. **Vector Embeddings**: Comparing multiple embedding models (Cohere vs. OpenAI) and approaches (native vs. translated)
 4. **Search & Retrieval**: Implementing semantic search across multiple languages
-5. **Agent Integration**: Building AI agents that can understand and respond in multiple languages
+5. **Production API**: FastAPI-based search service for AI agents and applications
+6. **Agent Integration**: Building AI agents that can understand and respond in multiple languages
 
 ### 🏗️ System Architecture
 
@@ -23,18 +24,23 @@ graph TB
     
     C -->|Strategy 1| D[🌐 Multilanguage<br/>Native Vectors<br/>Cohere 1024-dim]
     C -->|Strategy 2| E[🔄 Translated<br/>English Vectors<br/>OpenAI 1536-dim]
+    C -->|Strategy 3| F[🌐 Multilanguage<br/>Native Vectors<br/>OpenAI 1536-dim]
     
     D --> G[📊 Document Indexing]
     E --> G
+    F --> G
     
     G --> H[🔍 Vector Search]
-    H --> I[🤖 AI Agent]
-    I --> J[💬 Multilingual Responses]
+    H --> I[🔌 Search API]
+    I --> J[🤖 AI Agent/Copilot]
+    J --> K[💬 Multilingual Responses]
     
     style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
     style D fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
     style E fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
-    style J fill:#F39C12,stroke:#D68910,stroke-width:2px,color:#fff
+    style F fill:#9B59B6,stroke:#7D3C98,stroke-width:2px,color:#fff
+    style I fill:#3498DB,stroke:#2874A6,stroke-width:2px,color:#fff
+    style K fill:#F39C12,stroke:#D68910,stroke-width:2px,color:#fff
 ```
 
 ### 🌍 The Challenges of Multilingual RAG Systems
@@ -92,11 +98,11 @@ Building effective multilingual RAG systems presents several unique challenges t
 
 ### 💡 Solution Strategies Implemented in This Project
 
-This repository demonstrates two main approaches to handle these challenges:
+This repository demonstrates three main approaches to handle these challenges:
 
-#### Strategy 1️⃣: Native Language Embeddings (Multilanguage Index)
+#### Strategy 1️⃣: Native Language Embeddings with Cohere (Multilanguage Index)
 
-**Approach**: Use multilingual embedding models (like Cohere) that can embed text in multiple languages into the same vector space.
+**Approach**: Use Cohere's specialized multilingual embedding model (embed-v4.0) that can embed text in 100+ languages into the same vector space.
 
 **Pros**:
 - ✅ No translation needed - preserves original meaning and nuances
@@ -128,6 +134,36 @@ This repository demonstrates two main approaches to handle these challenges:
 - ❌ Technical terms may be mistranslated
 
 **Best for**: Static document collections that can be batch-translated, especially when English embedding models significantly outperform multilingual alternatives.
+
+#### Strategy 3️⃣: Native Language Embeddings with OpenAI (Multi Language OpenAI Index)
+
+**Approach**: Use OpenAI's text-embedding-3-large model which has built-in multilingual capabilities to embed documents in their original language.
+
+**Pros**:
+- ✅ No translation needed - preserves original meaning
+- ✅ Single model for both indexing and search queries
+- ✅ High-quality embeddings (1536 dimensions)
+- ✅ Simpler pipeline than translation-based approach
+- ✅ Good performance on major languages
+
+**Cons**:
+- ❌ Variable accuracy across different languages
+- ❌ Best for well-represented languages in training data
+- ❌ May underperform Cohere on low-resource languages
+- ❌ Less optimized for multilingual scenarios than Cohere
+
+**Best for**: Applications requiring high-quality embeddings for major languages with a simple implementation, where you want to use OpenAI for both embeddings and LLM responses.
+
+### 📊 Strategy Comparison
+
+| Feature | Cohere Native | OpenAI Translated | OpenAI Native |
+|---------|---------------|-------------------|---------------|
+| **Dimensions** | 1024 | 1536 | 1536 |
+| **Translation Required** | ❌ No | ✅ Yes | ❌ No |
+| **Language Support** | 100+ optimized | English only | 100+ variable |
+| **Setup Complexity** | Medium | High | Low |
+| **Best For** | Maximum multilingual accuracy | Consistent English quality | Simplified multilingual |
+| **Index Name** | `multilanguage` | `translated` | `multi_language_openai` |
 
 ---
 
@@ -488,6 +524,220 @@ To dive deeper into multilingual RAG systems, we recommend these resources:
 
 ---
 
+## ☁️ Azure Resources Required
+
+To run this demo, you need to create the following Azure resources:
+
+### Core Services
+
+- **🔍 Azure AI Search**
+  - For indexing and searching multilingual documents
+  - Three indexes used:
+    - `multilanguage` - Native language embeddings with Cohere (1024 dimensions)
+    - `translated` - English-translated embeddings with OpenAI (1536 dimensions)
+    - `multi_language_openai` - Native language embeddings with OpenAI text-embedding-3-large (1536 dimensions)
+
+- **🤖 Azure OpenAI Service**
+  - For generating embeddings and AI agent responses
+  - Models required:
+    - `text-embedding-3-large` - For multilingual embeddings (supports 100+ languages)
+    - `gpt-4o` or `gpt-4` - For AI agent reasoning and response generation
+
+- **🌍 Azure AI Language Service**
+  - For language detection on multilingual documents
+  - Used to identify document language before embedding
+
+- **🔄 Azure AI Translator**
+  - For translating documents to English in the translation-based approach
+  - Supports batch document translation
+
+- **💾 Azure Storage Account**
+  - For temporary storage during document translation
+  - Blob containers used for upload/download of translated documents
+
+- **🔐 Cohere API (via Azure AI Studio)**
+  - For multilingual embeddings using Cohere's embed-v4.0 model
+  - Supports 100+ languages with high-quality semantic embeddings
+  - Access through Azure AI Studio Model Catalog
+
+### Optional Services
+
+- **🐳 Azure Container Registry**
+  - For storing the Search API Docker image
+  - Required for deploying the containerized API
+
+- **🌐 Azure App Service (Web App for Containers)**
+  - For hosting the Search API as a production-ready service
+  - Enables integration with AI agents, Copilot Studio, or other applications
+
+---
+
+## 🔌 Search API - Production-Ready Multilingual Search
+
+The `src/search-api` folder contains a **FastAPI-based REST API** that provides production-ready access to the multilingual search functionality. This API can be consumed by:
+
+- 🤖 **AI Agents** - Integrate search as a tool/function
+- 💬 **Microsoft Copilot Studio** - Use as a custom connector
+- 🌐 **Web Applications** - Direct REST API integration
+- 📱 **Mobile Apps** - Cross-platform search access
+
+### 🏗️ API Architecture
+
+```mermaid
+graph TB
+    A[Client Request] --> B[FastAPI Service]
+    B --> C[Generate Query Embedding]
+    C --> D[OpenAI text-embedding-3-large]
+    D --> E[Hybrid Search]
+    E --> F[Azure AI Search]
+    F --> G{Search Strategy}
+    
+    G -->|Vector Search| H[Semantic Similarity]
+    G -->|Fuzzy Text Search| I[Brand/Model Matching]
+    
+    H --> J[Merge Results]
+    I --> J
+    J --> K[Top 5 Results]
+    K --> L[JSON Response]
+    
+    style B fill:#9B59B6,stroke:#7D3C98,stroke-width:2px,color:#fff
+    style D fill:#3498DB,stroke:#2874A6,stroke-width:2px,color:#fff
+    style F fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
+    style K fill:#F39C12,stroke:#D68910,stroke-width:2px,color:#000
+```
+
+### 🎯 API Endpoint
+
+**POST** `/api/car/fix`
+
+**Request Body**:
+```json
+{
+  "brand": "Toyota",
+  "model": "Camry",
+  "fault": "My battery drains overnight"
+}
+```
+
+**Response**:
+```json
+[
+  {
+    "id": "1",
+    "score": 0.89,
+    "brand": "Toyota",
+    "model": "Camry",
+    "fault": "Battery drains when car is parked",
+    "fix": "Check for parasitic drain. Common causes include interior lights..."
+  }
+]
+```
+
+### 🔍 Search Strategy
+
+The API implements a **hybrid search approach** combining:
+
+1. **🧮 Vector Search (Semantic)**: 
+   - Generates embeddings for the fault description using OpenAI text-embedding-3-large
+   - Performs k-nearest neighbors search (k=50) in vector space
+   - Captures semantic similarity across languages
+
+2. **📝 Fuzzy Text Search**:
+   - Uses Azure Search's fuzzy matching (`~` operator) on brand and model fields
+   - Handles typos and variations in brand/model names
+   - Example: "Toyot~" matches "Toyota"
+
+3. **🔀 Hybrid Ranking**:
+   - Combines semantic and lexical scores
+   - Returns top 5 most relevant results
+   - Balances semantic understanding with exact matching
+
+### 🌍 Multilingual Support
+
+The API leverages the **OpenAI text-embedding-3-large** model which provides:
+
+- ✅ **Native multilingual support** - Over 100 languages
+- ✅ **No translation required** - Embed queries in any language
+- ✅ **Cross-language search** - Query in one language, find results in another
+- ⚠️ **Language-dependent accuracy** - Performance varies by language and dataset
+
+**Important Note**: While OpenAI embeddings support multiple languages, accuracy can vary:
+- **Best performance**: English, Spanish, French, German, Italian, Portuguese
+- **Good performance**: Major languages (Chinese, Japanese, Korean, Arabic)
+- **Variable performance**: Low-resource languages
+
+For maximum accuracy across all languages, consider using the Cohere-based approach (`indexing_multilanguage_cohere.ipynb`) which is specifically optimized for multilingual scenarios.
+
+### 🐳 Deployment
+
+The API is containerized and ready for production deployment:
+
+**1. Build Docker Image**:
+```bash
+cd src/search-api
+docker build -t car-fix-api:latest .
+```
+
+**2. Push to Azure Container Registry**:
+```bash
+az acr login --name <your-registry-name>
+docker tag car-fix-api:latest <your-registry>.azurecr.io/car-fix-api:latest
+docker push <your-registry>.azurecr.io/car-fix-api:latest
+```
+
+**3. Deploy to Azure App Service (Web App for Containers)**:
+- Create a Web App for Containers in Azure Portal
+- Configure the container image from Azure Container Registry
+- Set environment variables (see `config.py`):
+  - `SEARCH_ENDPOINT`
+  - `SEARCH_API_KEY`
+  - `SEARCH_INDEX_NAME`
+  - `OPENAI_ENDPOINT`
+  - `OPENAI_KEY`
+  - `EMBEDDING_OPENAI_DEPLOYMENT`
+
+**4. Access the API**:
+- Swagger UI available at: `https://<your-app>.azurewebsites.net/docs`
+- API endpoint: `https://<your-app>.azurewebsites.net/api/car/fix`
+
+### 🔧 Configuration
+
+Environment variables required (create a `.env` file or configure in App Service):
+
+```env
+# Azure AI Search
+SEARCH_ENDPOINT=https://your-service.search.windows.net
+SEARCH_API_KEY=your-admin-key
+SEARCH_INDEX_NAME=multi_language_openai
+
+# Azure OpenAI
+OPENAI_ENDPOINT=https://your-service.openai.azure.com
+OPENAI_KEY=your-api-key
+EMBEDDING_OPENAI_DEPLOYMENT=text-embedding-3-large
+```
+
+### 🤝 Integration Examples
+
+**AI Agent Tool Definition**:
+```python
+{
+  "name": "search_car_problems",
+  "description": "Search for car troubleshooting solutions based on brand, model, and fault description",
+  "parameters": {
+    "brand": "string",
+    "model": "string", 
+    "fault": "string"
+  }
+}
+```
+
+**Copilot Studio Custom Connector**:
+- Import OpenAPI spec from `/docs` endpoint
+- Configure authentication (API key or Azure AD)
+- Use in conversational flows to provide car troubleshooting assistance
+
+---
+
 ## 📓 Notebooks Overview
 
 Execute the notebooks in the following order to build a complete multilingual RAG system:
@@ -495,9 +745,22 @@ Execute the notebooks in the following order to build a complete multilingual RA
 ```mermaid
 graph LR
     A[1️⃣ Generate Data] --> B[2️⃣ Create Index]
-    B --> C[3️⃣ Index Multilanguage]
-    B --> D[4️⃣ Index Translated]
-    C --> E[5️⃣ Search & Test]
+    B --> C[3️⃣ Index Cohere<br/>Multilanguage]
+    B --> D[4️⃣ Index OpenAI<br/>Multilanguage]
+    B --> E[5️⃣ Index OpenAI<br/>Translated]
+    C --> F[6️⃣ Search & Test]
+    D --> F
+    E --> F
+    F --> G[7️⃣ Build Agent]
+    
+    style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
+    style B fill:#F5A623,stroke:#D68910,stroke-width:2px,color:#fff
+    style C fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
+    style D fill:#9B59B6,stroke:#7D3C98,stroke-width:2px,color:#fff
+    style E fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
+    style F fill:#50E3C2,stroke:#2ECC71,stroke-width:2px,color:#000
+    style G fill:#F39C12,stroke:#D68910,stroke-width:2px,color:#fff
+```
     D --> E
     E --> F[6️⃣ Build Agent]
     
@@ -529,12 +792,13 @@ graph LR
 
 ### 2️⃣ `create-index.ipynb` - Azure AI Search Index Setup
 
-**Purpose**: Creates two different Azure AI Search indexes to test multilingual retrieval strategies.
+**Purpose**: Creates three different Azure AI Search indexes to test various multilingual retrieval strategies.
 
 **What it does**:
-- 📐 Configures two index schemas with different multilingual approaches:
-  - **`multilanguage`**: Vectorizes content in original language (Cohere 1024-dim)
-  - **`translated`**: Translates to English before vectorizing (OpenAI 1536-dim)
+- 📐 Configures three index schemas with different multilingual approaches:
+  - **`multilanguage`**: Native language vectors using Cohere (1024-dim)
+  - **`translated`**: English-translated vectors using OpenAI (1536-dim)
+  - **`multi_language_openai`**: Native language vectors using OpenAI text-embedding-3-large (3072-dim)
 - 🔍 Sets up HNSW vector search for efficient semantic matching
 - 🏷️ Configures faceted navigation and filtering capabilities
 - 🔧 Defines field mappings and search configurations
@@ -549,33 +813,56 @@ graph LR
   SEARCH_API_KEY=your-admin-api-key
   ```
 
-**Output**: Two search indexes ready for document ingestion and testing
+**Output**: Three search indexes ready for document ingestion and testing
 
 ---
 
-### 3️⃣ `indexing_multilanguage.ipynb` - Native Language Indexing
+### 3️⃣ `indexing_multilanguage_cohere.ipynb` - Cohere Native Language Indexing
 
-**Purpose**: Indexes documents in their original languages using multilingual embeddings (Strategy 1).
+**Purpose**: Indexes documents in their original languages using Cohere's multilingual embeddings (Strategy 1).
 
 **What it does**:
 - 📖 Reads the multilingual dataset from Excel
 - 🌍 Uses Azure AI Language to detect the language of each document
-- ✅ Validates that all languages are supported by Cohere
-- 🧮 Generates embeddings using Cohere's multilingual model (1024 dimensions)
+- ✅ Validates that all languages are supported by Cohere (100+ languages)
+- 🧮 Generates embeddings using Cohere's embed-v4.0 model (1024 dimensions)
 - 📤 Uploads documents with native language vectors to Azure AI Search
 
 **When to run**: Execute this **after creating indexes** to populate the `multilanguage` index.
 
 **Key Features**:
 - No translation required
-- Preserves original text and cultural nuances
-- Single embedding per document
+- Optimized for multilingual scenarios
+- Uses `search_document` input type for optimal retrieval
+- Best accuracy for low-resource languages
 
 **Output**: Populated `multilanguage` index ready for semantic search
 
 ---
 
-### 4️⃣ `indexing_translate_english.ipynb` - Translation-Based Indexing
+### 4️⃣ `indexing_multilanguage_openai.ipynb` - OpenAI Native Language Indexing
+
+**Purpose**: Indexes documents in their original languages using OpenAI's text-embedding-3-large model (Strategy 3).
+
+**What it does**:
+- 📖 Reads the multilingual dataset from Excel
+- 🧮 Generates embeddings using OpenAI text-embedding-3-large (1536 dimensions)
+- 📤 Uploads documents with native language vectors to Azure AI Search
+- ⚡ Simplified pipeline - no language detection or validation needed
+
+**When to run**: Execute this **after creating indexes** to populate the `multi_language_openai` index.
+
+**Key Features**:
+- No translation required
+- Same dimensions as translated approach (1536-dim)
+- Simpler implementation than Cohere approach
+- Good for major languages
+
+**Output**: Populated `multi_language_openai` index ready for semantic search
+
+---
+
+### 5️⃣ `indexing_translate_english.ipynb` - Translation-Based Indexing
 
 **Purpose**: Translates all documents to English before indexing (Strategy 2).
 
@@ -599,29 +886,30 @@ graph LR
 
 ---
 
-### 5️⃣ `search_multilanguage.ipynb` - Search & Testing
+### 6️⃣ `search_multilanguage.ipynb` - Search & Testing
 
-**Purpose**: Tests and compares multilingual search capabilities across both strategies.
+**Purpose**: Tests and compares multilingual search capabilities across all three indexing strategies.
 
 **What it does**:
 - 🔍 Executes sample queries in different languages
-- 📊 Compares retrieval results from both indexes
+- 📊 Compares retrieval results from all three indexes
 - 📈 Demonstrates vector similarity search
-- 🌐 Shows how to retrieve results in the original or translated format
+- 🌐 Shows how to retrieve results in original or translated format
 - 💬 Tests cross-language retrieval scenarios
 
-**When to run**: Execute this **after indexing documents** to test and compare search quality.
+**When to run**: Execute this **after indexing documents** to test and compare search quality across strategies.
 
 **Key Test Scenarios**:
 - Same language query (e.g., French query → French documents)
 - Cross-language query (e.g., English query → Japanese documents)
-- Quality comparison between strategies
+- Quality comparison between all three strategies
+- Performance metrics and accuracy analysis
 
-**Output**: Performance insights and comparison metrics
+**Output**: Performance insights and comparison metrics across all indexing approaches
 
 ---
 
-### 6️⃣ `agent.ipynb` - AI Agent Implementation
+### 7️⃣ `agent.ipynb` - AI Agent Implementation
 
 **Purpose**: Builds intelligent AI agents that handle multilingual car troubleshooting queries using Azure AI Foundry.
 

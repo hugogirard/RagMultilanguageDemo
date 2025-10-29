@@ -1,0 +1,15 @@
+[project]
+name = "search-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "aiohttp>=3.13.2",
+    "azure-search-documents>=11.6.0",
+    "fastapi>=0.120.2",
+    "fastapi-cli>=0.0.14",
+    "gunicorn>=23.0.0",
+    "openai>=2.6.1",
+    "python-dotenv>=1.2.1",
+]
