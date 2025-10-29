@@ -46,20 +46,20 @@ search_client_english = SearchClient(
     index_name="translated"
 )
 
-search_client_asked_language = SearchClient(
+search_client_cohere = SearchClient(
     endpoint=search_endpoint,
     credential=AzureKeyCredential(search_api_key),
     index_name="multilanguage"
 )
 
 # Hybrid index not implemented in this demo
-# search_client_hybrid = SearchClient(
-#     endpoint=search_endpoint,
-#     credential=AzureKeyCredential(search_api_key),
-#     index_name="translated_dual"    
-# )
+search_client_openai = SearchClient(
+    endpoint=search_endpoint,
+    credential=AzureKeyCredential(search_api_key),
+    index_name="multi_language_openai"    
+)
 
-client = AzureOpenAI(
+openai_client = AzureOpenAI(
     azure_endpoint=open_ai_endpoint,
     api_key=open_ai_key,
     api_version="2024-12-01-preview"
@@ -154,7 +154,7 @@ def _do_search(brand:str,model:str,fault:str,embedding:List[float],search_client
     except Exception as ex:
         return ex        
 
-def get_resolution_asked_language(brand: str, model:str, fault:str) -> str:
+def get_resolution_asked_language_cohere(brand: str, model:str, fault:str) -> str:
     """
     Searches for troubleshooting resolutions in the user's requested language.
     Uses Cohere embeddings for multilanguage support and searches the multilanguage index.
@@ -175,7 +175,31 @@ def get_resolution_asked_language(brand: str, model:str, fault:str) -> str:
                                        model=cohere_model)
         embedding = response.data[0]['embedding']
 
-        return _do_search(brand,model,fault,embedding,search_client_asked_language)
+        return _do_search(brand,model,fault,embedding,search_client_cohere)
+        
+    except Exception as ex:
+        return ex    
+
+def get_resolution_asked_language_openai(brand: str, model:str, fault:str) -> str:
+    """
+    Searches for troubleshooting resolutions in the user's requested language.
+    Uses OpenAI embeddings for multilanguage support and searches the multilanguage index.
+
+    Args:
+        brand: Brand of the car
+        model: Model of the car
+        fault: Description of the problem/fault
+        
+    Returns:
+        JSON string with troubleshooting documents in the requested language
+    """
+
+    try:
+
+        response = openai_client.embeddings.create(input=fault, model=open_ai_embedding_model, dimensions=1536)
+        embedding = response.data[0].embedding 
+
+        return _do_search(brand,model,fault,embedding,search_client_openai)
         
     except Exception as ex:
         return ex    
@@ -197,7 +221,7 @@ def get_resolution_english(brand:str, model:str, fault:str) -> str:
     try:
         # Vectorize the vault
         query = fault
-        response = client.embeddings.create(input=query, model=open_ai_embedding_model, dimensions=1536)
+        response = openai_client.embeddings.create(input=query, model=open_ai_embedding_model, dimensions=1536)
         embedding = response.data[0].embedding 
 
         # Fuzzy search
