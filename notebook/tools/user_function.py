@@ -52,11 +52,12 @@ search_client_asked_language = SearchClient(
     index_name="multilanguage"
 )
 
-search_client_hybrid = SearchClient(
-    endpoint=search_endpoint,
-    credential=AzureKeyCredential(search_api_key),
-    index_name="translated_dual"    
-)
+# Hybrid index not implemented in this demo
+# search_client_hybrid = SearchClient(
+#     endpoint=search_endpoint,
+#     credential=AzureKeyCredential(search_api_key),
+#     index_name="translated_dual"    
+# )
 
 client = AzureOpenAI(
     azure_endpoint=open_ai_endpoint,
