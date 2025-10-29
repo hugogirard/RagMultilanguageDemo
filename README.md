@@ -23,11 +23,9 @@ graph TB
     
     C -->|Strategy 1| D[🌐 Multilanguage<br/>Native Vectors<br/>Cohere 1024-dim]
     C -->|Strategy 2| E[🔄 Translated<br/>English Vectors<br/>OpenAI 1536-dim]
-    C -->|Strategy 3| F[🎭 Hybrid Dual<br/>Both Vectors<br/>Best of Both]
     
     D --> G[📊 Document Indexing]
     E --> G
-    F --> G
     
     G --> H[🔍 Vector Search]
     H --> I[🤖 AI Agent]
@@ -36,7 +34,6 @@ graph TB
     style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
     style D fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
     style E fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
-    style F fill:#9B59B6,stroke:#7D3C98,stroke-width:2px,color:#fff
     style J fill:#F39C12,stroke:#D68910,stroke-width:2px,color:#fff
 ```
 
@@ -95,7 +92,7 @@ Building effective multilingual RAG systems presents several unique challenges t
 
 ### 💡 Solution Strategies Implemented in This Project
 
-This repository demonstrates three main approaches to handle these challenges:
+This repository demonstrates two main approaches to handle these challenges:
 
 #### Strategy 1️⃣: Native Language Embeddings (Multilanguage Index)
 
@@ -132,24 +129,6 @@ This repository demonstrates three main approaches to handle these challenges:
 
 **Best for**: Static document collections that can be batch-translated, especially when English embedding models significantly outperform multilingual alternatives.
 
-#### Strategy 3️⃣: Hybrid Dual-Vector (Best of Both Worlds)
-
-**Approach**: Store both native language vectors and English-translated vectors for each document.
-
-**Pros**:
-- ✅ Flexibility to search in either space based on query language
-- ✅ Better coverage across all language scenarios
-- ✅ Can boost results based on language matching
-- ✅ Reduces risk of translation errors affecting retrieval
-
-**Cons**:
-- ❌ Higher storage costs (2x vectors)
-- ❌ More complex indexing pipeline
-- ❌ Still requires translation infrastructure
-- ❌ Query logic is more sophisticated
-
-**Best for**: Production systems where retrieval quality is critical and storage costs are acceptable.
-
 ### 📚 Expert Guidance & Best Practices
 
 Based on guidance from Microsoft Azure Search and Azure AI teams, here are key recommendations:
@@ -167,15 +146,15 @@ Based on guidance from Microsoft Azure Search and Azure AI teams, here are key r
 
 #### 🗂️ Design Your Index Structure
 
-Consider creating an index that includes:
-- **Original content**: Exactly as provided by the source
-- **Translated content**: Copy translated to a pivot language (typically English)
+Consider creating separate indexes for different strategies:
+- **Native language index**: Stores content in original languages with multilingual embeddings
+- **Translated index**: Stores English-translated content with English embeddings
 - **Language metadata**: Track the original language of each document
 
-This dual-storage approach ensures:
-- ✅ Multilingual content is preserved and searchable
-- ✅ High-quality English embeddings can be leveraged
-- ✅ Flexibility in choosing search strategy at query time
+This approach ensures:
+- ✅ Clear separation of strategies for easy comparison
+- ✅ Flexibility to choose the best strategy for your use case
+- ✅ Ability to test and benchmark different approaches
 
 #### 🌐 Check Language Support
 
@@ -238,19 +217,16 @@ graph LR
     A[1️⃣ Generate Data] --> B[2️⃣ Create Index]
     B --> C[3️⃣ Index Multilanguage]
     B --> D[4️⃣ Index Translated]
-    B --> E[5️⃣ Index Hybrid]
-    C --> F[6️⃣ Search & Test]
-    D --> F
-    E --> F
-    F --> G[7️⃣ Build Agent]
+    C --> E[5️⃣ Search & Test]
+    D --> E
+    E --> F[6️⃣ Build Agent]
     
     style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:2px,color:#fff
     style B fill:#F5A623,stroke:#D68910,stroke-width:2px,color:#fff
     style C fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
     style D fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:#fff
-    style E fill:#9B59B6,stroke:#7D3C98,stroke-width:2px,color:#fff
-    style F fill:#50E3C2,stroke:#2ECC71,stroke-width:2px,color:#000
-    style G fill:#F39C12,stroke:#D68910,stroke-width:2px,color:#fff
+    style E fill:#50E3C2,stroke:#2ECC71,stroke-width:2px,color:#000
+    style F fill:#F39C12,stroke:#D68910,stroke-width:2px,color:#fff
 ```
 
 ### 1️⃣ `generate.data.ipynb` - Dataset Generation
@@ -273,13 +249,12 @@ graph LR
 
 ### 2️⃣ `create-index.ipynb` - Azure AI Search Index Setup
 
-**Purpose**: Creates three different Azure AI Search indexes to test multilingual retrieval strategies.
+**Purpose**: Creates two different Azure AI Search indexes to test multilingual retrieval strategies.
 
 **What it does**:
-- 📐 Configures three index schemas with different multilingual approaches:
+- 📐 Configures two index schemas with different multilingual approaches:
   - **`multilanguage`**: Vectorizes content in original language (Cohere 1024-dim)
   - **`translated`**: Translates to English before vectorizing (OpenAI 1536-dim)
-  - **`translated_dual`**: Stores both original and English vectors (hybrid approach)
 - 🔍 Sets up HNSW vector search for efficient semantic matching
 - 🏷️ Configures faceted navigation and filtering capabilities
 - 🔧 Defines field mappings and search configurations
@@ -294,7 +269,7 @@ graph LR
   SEARCH_API_KEY=your-admin-api-key
   ```
 
-**Output**: Three search indexes ready for document ingestion and testing
+**Output**: Two search indexes ready for document ingestion and testing
 
 ---
 
@@ -344,37 +319,13 @@ graph LR
 
 ---
 
-### 5️⃣ `indexing_hybrid.ipynb` - Hybrid Dual-Vector Indexing
+### 5️⃣ `search_multilanguage.ipynb` - Search & Testing
 
-**Purpose**: Implements a hybrid approach with both native and English vectors (Strategy 3).
-
-**What it does**:
-- 📖 Reads the multilingual dataset
-- 🌍 Detects language using Azure AI Language
-- 🔄 Translates non-English content to English using Azure AI Translator
-- 🧮 Generates **two sets of embeddings** for each document:
-  - Native language vectors (Cohere, 1024 dimensions)
-  - English translated vectors (OpenAI, 1536 dimensions)
-- 📤 Uploads documents with dual vectors to Azure AI Search
-
-**When to run**: Execute this **after creating indexes** to populate the `translated_dual` index.
-
-**Key Features**:
-- Maximum flexibility in search strategy
-- Better coverage for cross-language scenarios
-- Higher storage cost (2x vectors)
-
-**Output**: Populated `translated_dual` index with both vector types
-
----
-
-### 6️⃣ `search_multilanguage.ipynb` - Search & Testing
-
-**Purpose**: Tests and compares multilingual search capabilities across all three strategies.
+**Purpose**: Tests and compares multilingual search capabilities across both strategies.
 
 **What it does**:
 - 🔍 Executes sample queries in different languages
-- 📊 Compares retrieval results from all three indexes
+- 📊 Compares retrieval results from both indexes
 - 📈 Demonstrates vector similarity search
 - 🌐 Shows how to retrieve results in the original or translated format
 - 💬 Tests cross-language retrieval scenarios
@@ -384,21 +335,20 @@ graph LR
 **Key Test Scenarios**:
 - Same language query (e.g., French query → French documents)
 - Cross-language query (e.g., English query → Japanese documents)
-- Quality comparison across strategies
+- Quality comparison between strategies
 
 **Output**: Performance insights and comparison metrics
 
 ---
 
-### 7️⃣ `agent.ipynb` - AI Agent Implementation
+### 6️⃣ `agent.ipynb` - AI Agent Implementation
 
 **Purpose**: Builds intelligent AI agents that handle multilingual car troubleshooting queries using Azure AI Foundry.
 
 **What it does**:
-- 🤖 Implements **three different agent strategies**:
+- 🤖 Implements **two different agent strategies**:
   - **English Translation Agent**: Translates all queries to English before search
   - **Native Language Agent**: Searches using the query's original language
-  - **Hybrid Dual-Vector Agent**: Uses both embedding types for optimal results
 - 🔧 Uses Azure AI Foundry Agents with function calling capabilities
 - 💬 Demonstrates orchestrated multi-turn conversations
 - 🎯 Shows language-aware response generation
@@ -421,7 +371,6 @@ graph LR
 |----------|----------------|-------------|--------------|---------------|----------|
 | **1️⃣ Native Language** | Cohere (1024-dim) | ❌ None | 💰 Low | ⚡ Fast | Languages well-supported by Cohere |
 | **2️⃣ English Translation** | OpenAI (1536-dim) | ✅ Batch | 💰 Low | ⚡ Fast | Leveraging top English models |
-| **3️⃣ Hybrid Dual Vector** | Both | ✅ Batch | 💰💰 High (2x) | ⚡ Medium | Production requiring flexibility |
 
 ### When to Use Each Strategy
 
@@ -430,18 +379,14 @@ graph LR
 - ✅ You want to preserve original text nuances
 - ✅ Budget is limited
 - ✅ Simple architecture is preferred
+- ✅ Query language typically matches document language
 
 **Strategy 2 - English Translation** 🔄
 - ✅ English embedding models perform significantly better
 - ✅ Static document collection that can be batch-translated
 - ✅ You need consistent quality across all languages
 - ✅ Evaluation and benchmarking are important
-
-**Strategy 3 - Hybrid Dual Vector** 🎭
-- ✅ Retrieval quality is critical
-- ✅ Storage costs are acceptable
-- ✅ You need flexibility for different query scenarios
-- ✅ Production system with diverse language requirements
+- ✅ Cross-language queries are common
 
 ---
 
@@ -525,21 +470,18 @@ graph TB
     
     B --> C[🌐 3. indexing_multilanguage.ipynb<br/>Strategy 1]
     B --> D[🔄 4. indexing_translate_english.ipynb<br/>Strategy 2]
-    B --> E[🎭 5. indexing_hybrid.ipynb<br/>Strategy 3]
     
-    C --> F[🔍 6. search_multilanguage.ipynb<br/>Test & Compare]
-    D --> F
-    E --> F
+    C --> E[🔍 5. search_multilanguage.ipynb<br/>Test & Compare]
+    D --> E
     
-    F --> G[🤖 7. agent.ipynb<br/>Build AI Agents]
+    E --> F[🤖 6. agent.ipynb<br/>Build AI Agents]
     
     style A fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px,color:#fff
     style B fill:#F5A623,stroke:#D68910,stroke-width:3px,color:#fff
     style C fill:#27AE60,stroke:#1E8449,stroke-width:3px,color:#fff
     style D fill:#E74C3C,stroke:#C0392B,stroke-width:3px,color:#fff
-    style E fill:#9B59B6,stroke:#7D3C98,stroke-width:3px,color:#fff
-    style F fill:#50E3C2,stroke:#2ECC71,stroke-width:3px,color:#000
-    style G fill:#F39C12,stroke:#D68910,stroke-width:3px,color:#fff
+    style E fill:#50E3C2,stroke:#2ECC71,stroke-width:3px,color:#000
+    style F fill:#F39C12,stroke:#D68910,stroke-width:3px,color:#fff
 ```
 
 **Quick Start Steps**:
@@ -553,15 +495,14 @@ graph TB
 2. **Create Indexes** (2 minutes)
    ```bash
    jupyter notebook create-index.ipynb
-   # Run all cells to create three search indexes
+   # Run all cells to create two search indexes
    ```
 
 3. **Index Documents** (15-20 minutes total)
    ```bash
-   # Choose one or all strategies
+   # Choose one or both strategies
    jupyter notebook indexing_multilanguage.ipynb        # Strategy 1
    jupyter notebook indexing_translate_english.ipynb    # Strategy 2
-   jupyter notebook indexing_hybrid.ipynb               # Strategy 3
    ```
 
 4. **Test Search** (5 minutes)
@@ -631,10 +572,9 @@ pie title Language Distribution (60 Records)
 | Strategy | Retrieval Success | Avg. Similarity Score | Comments |
 |----------|------------------|----------------------|----------|
 | Native Language | ✅ Good | 0.72 | Multilingual model handles well |
-| English Translation | ❌ Poor | 0.45 | Requires query translation |
-| Hybrid Dual | ✅ Excellent | 0.85 | Uses appropriate vector space |
+| English Translation | ✅ Better | 0.78 | Query translation improves results |
 
-**Key Insight**: Hybrid approach provides the best cross-language retrieval.
+**Key Insight**: Translation strategy provides more consistent cross-language retrieval when query translation is implemented.
 
 ---
 
@@ -668,19 +608,19 @@ graph LR
 
 **Cost Breakdown** (for 10,000 documents, 1M queries/month):
 
-| Component | Strategy 1 | Strategy 2 | Strategy 3 |
-|-----------|-----------|-----------|-----------|
-| **Indexing** |  |  |  |
-| Translation | $0 | $150 | $150 |
-| Embeddings | $80 | $120 | $200 |
-| **Querying** |  |  |  |
-| Query Embeddings | $40 | $40 | $60 |
-| Translation | $0 | $60 | $30 |
-| **Storage** |  |  |  |
-| Vector Storage | $50 | $75 | $150 |
-| **Total/Month** | **$170** | **$445** | **$590** |
+| Component | Strategy 1 | Strategy 2 |
+|-----------|-----------|-----------|
+| **Indexing** |  |  |
+| Translation | $0 | $150 |
+| Embeddings | $80 | $120 |
+| **Querying** |  |  |
+| Query Embeddings | $40 | $40 |
+| Translation | $0 | $60 |
+| **Storage** |  |  |
+| Vector Storage | $50 | $75 |
+| **Total/Month** | **$170** | **$445** |
 
-**Key Insight**: Native language is most cost-effective, hybrid is most expensive but highest quality.
+**Key Insight**: Native language is most cost-effective, while translation strategy offers better quality at higher cost.
 
 ---
 
@@ -693,14 +633,12 @@ graph LR
     A[Query] --> B{Strategy}
     B -->|Native| C[180ms<br/>⚡ Fastest]
     B -->|English| D[240ms<br/>⚡ Fast]
-    B -->|Hybrid| E[320ms<br/>⏱️ Moderate]
     
     style C fill:#27AE60,stroke:#1E8449,stroke-width:2px,color:#fff
     style D fill:#F5A623,stroke:#D68910,stroke-width:2px,color:#fff
-    style E fill:#9B59B6,stroke:#7D3C98,stroke-width:2px,color:#fff
 ```
 
-**Key Insight**: All strategies meet typical latency requirements (<500ms), with native language being fastest.
+**Key Insight**: Both strategies meet typical latency requirements (<500ms), with native language being slightly faster.
 
 ---
 
@@ -743,7 +681,7 @@ graph LR
 
 1. **Don't skip evaluation** - Quality varies significantly across languages
 2. **Don't assume** - Test multilingual models on your specific languages
-3. **Don't over-engineer** - Start simple (Strategy 1 or 2) before going hybrid
+3. **Don't over-engineer** - Choose the strategy that fits your specific use case
 4. **Don't ignore costs** - Monitor embedding and translation API usage
 5. **Don't forget language detection** - Essential for routing and consistency
 6. **Don't translate everything** - Some content (brand names, technical terms) should stay original
@@ -786,9 +724,9 @@ if len(text.split()) < 20:
 
 **Solutions**:
 ```python
-# Option 1: Switch to hybrid strategy
-# Option 2: Translate queries to English
-# Option 3: Use language-specific analyzers
+# Option 1: Translate queries to English
+# Option 2: Use language-specific analyzers
+# Option 3: Switch to English translation strategy
 ```
 
 ---
