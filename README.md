@@ -1,6 +1,35 @@
 # 🚗 Multilingual RAG Demo - Car Troubleshooting System
 
-## 📖 Introduction
+## � Table of Contents
+
+- [📖 Introduction](#-introduction)
+  - [🎯 What This Project Demonstrates](#-what-this-project-demonstrates)
+  - [🏗️ System Architecture](#️-system-architecture)
+  - [🌍 The Challenges of Multilingual RAG Systems](#-the-challenges-of-multilingual-rag-systems)
+  - [💡 Solution Strategies Implemented in This Project](#-solution-strategies-implemented-in-this-project)
+  - [📊 Strategy Comparison](#-strategy-comparison)
+- [🌟 Deep Dive: Cohere Embeddings for Multilingual RAG](#-deep-dive-cohere-embeddings-for-multilingual-rag)
+  - [🔑 The Power of `input_type` Parameter](#-the-power-of-input_type-parameter)
+  - [🌍 Multilingual Support Architecture](#-multilingual-support-architecture)
+  - [🎯 Implementation in This Demo](#-implementation-in-this-demo)
+  - [📊 Cohere vs. OpenAI: Key Differences](#-cohere-vs-openai-key-differences)
+  - [🎯 When to Choose Multi-Language Embeddings vs. Translation](#-when-to-choose-multi-language-embeddings-vs-translation)
+  - [📚 Expert Guidance & Best Practices](#-expert-guidance--best-practices)
+- [☁️ Azure Resources Required](#️-azure-resources-required)
+  - [Core Services](#core-services)
+  - [Optional Services](#optional-services)
+- [🔌 Search API - Production-Ready Multilingual Search](#-search-api---production-ready-multilingual-search)
+  - [🏗️ API Architecture](#️-api-architecture)
+  - [🎯 API Endpoint](#-api-endpoint)
+  - [🐳 Deployment](#-deployment)
+- [📓 Notebooks Overview](#-notebooks-overview)
+- [🚀 Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Execution Order](#execution-order)
+
+---
+
+## �📖 Introduction
 
 Welcome to the **Multilingual RAG Demo** repository! This project provides a comprehensive exploration of building Retrieval-Augmented Generation (RAG) systems that handle **multilingual content** effectively. Through a practical car troubleshooting use case, we demonstrate various strategies for indexing, searching, and retrieving information across **7 different languages** (English 🇬🇧, French 🇫🇷, Spanish 🇪🇸, Japanese 🇯🇵, Chinese 🇨🇳, Greek 🇬🇷, and Hebrew 🇮🇱).
 
